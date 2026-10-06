@@ -1,6 +1,8 @@
+import math
 import os
 import random
 import sys
+import time
 import pygame as pg
 
 
@@ -12,6 +14,36 @@ DELTA={
     pg.K_RIGHT: (+5,0),
 }
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+def calc_orientation(org: pg.Rect, dst: pg.Rect, current_xy: tuple[float, float]) -> tuple[float, float]:
+    """
+    爆弾Rect（org）からこうかとんRect（dst）に向かう速度ベクトルを計算する関数
+
+    引数:
+        org (pg.Rect): 爆弾のRect
+        dst (pg.Rect): こうかとんのRect
+        current_xy (tuple[float, float]): 計算前の方向ベクトル (vx, vy)
+    戻り値:
+        tuple[float, float]: 正規化された方向ベクトル (vx, vy) または 計算前のベクトル
+    """
+    # 1. 差ベクトル（こうかとん - 爆弾）を求める
+    diff_x = dst.centerx - org.centerx
+    diff_y = dst.centery - org.centery
+
+    # 2. 差ベクトルのノルム（距離）を計算
+    norm = math.hypot(diff_x, diff_y)
+
+    # 3. 距離が300未満の場合は慣性として直前の方向を維持する
+    if norm < 300:
+        return current_xy
+
+    # 4. ノルムが0でなければ√50（約7.07）に正規化して返す
+    if norm != 0:
+        vx = diff_x / norm * math.sqrt(50)
+        vy = diff_y / norm * math.sqrt(50)
+        return vx, vy
+
+    return current_xy
 
 def get_kk_imgs() -> dict[tuple[int, int], pg.Surface]:
     """
@@ -52,14 +84,22 @@ def init_bb_imgs() -> tuple[list[pg.Surface], list[int]]:
     for r in range(1, 11):
         bb_img = pg.Surface((20 * r, 20 * r))
         pg.draw.circle(bb_img, (255, 0, 0), (10 * r, 10 * r), 10 * r)
-        bb_img.set_colorkey((0, 0, 0))  # 黒色部分を透過処理
+        bb_img.set_colorkey((0, 0, 0))  
         bb_imgs.append(bb_img)
 
     bb_accs = [a for a in range(1, 11)]
     return bb_imgs, bb_accs
 
 def gameover(screen: pg.Surface) -> None:
+    """
+    ゲームオーバー時に画面をブラックアウトし、
+    「Game Over」の文字と泣いているこうかとん画像を5秒間表示する関数
 
+    引数:
+        screen (pg.Surface): 描画対象のメイン画面Surface
+    戻り値:
+        None
+    """
     bo_img = pg.Surface((WIDTH, HEIGHT))
     bo_img.set_alpha(200)
     pg.draw.rect(bo_img, (0, 0, 0), (0, 0, WIDTH, HEIGHT))
@@ -151,6 +191,8 @@ def main():
         screen.blit(kk_img, kk_rct)
 
         idx = min(tmr // 500, 9)
+
+        vx, vy = calc_orientation(bb_rct, kk_rct, (vx, vy))
 
         avx = vx * bb_accs[idx]
         avy = vy * bb_accs[idx]
