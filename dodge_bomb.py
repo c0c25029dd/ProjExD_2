@@ -13,6 +13,33 @@ DELTA={
 }
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+def get_kk_imgs() -> dict[tuple[int, int], pg.Surface]:
+    """
+    移動量のタプルをキー、それに対応する角度・反転処理を行った
+    こうかとんSurfaceを値とした辞書を作成して返す関数
+
+    戻り値:
+        dict[tuple[int, int], pg.Surface]: (移動量x, 移動量y) -> こうかとんSurface の辞書
+    """
+    # 基本のこうかとん画像（左向き）
+    base_img = pg.image.load("fig/3.png")
+
+    # 左右反転した画像（右向き）
+    flip_img = pg.transform.flip(base_img, True, False)
+
+    kk_dict = {
+        ( 0,  0): pg.transform.rotozoom(base_img, 0, 0.9),       # 静止時（左向き）
+        (-5,  0): pg.transform.rotozoom(base_img, 0, 0.9),       # 左
+        (-5, -5): pg.transform.rotozoom(base_img, -45, 0.9),    # 左上
+        ( 0, -5): pg.transform.rotozoom(flip_img, 90, 0.9),      # 上
+        (+5, -5): pg.transform.rotozoom(flip_img, 45, 0.9),     # 右上
+        (+5,  0): pg.transform.rotozoom(flip_img, 0, 0.9),      # 右
+        (+5, +5): pg.transform.rotozoom(flip_img, -45, 0.9),    # 右下
+        ( 0, +5): pg.transform.rotozoom(flip_img, -90, 0.9),    # 下
+        (-5, +5): pg.transform.rotozoom(base_img, 45, 0.9),     # 左下
+    }
+    return kk_dict
+
 def init_bb_imgs() -> tuple[list[pg.Surface], list[int]]:
     """
     10段階の大きさに合わせた爆弾Surfaceのリストと、
@@ -76,7 +103,8 @@ def main():
     pg.display.set_caption("逃げろ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("fig/pg_bg.jpg")    
-    kk_img = pg.transform.rotozoom(pg.image.load("fig/3.png"), 0, 0.9)
+    kk_imgs = get_kk_imgs()
+    kk_img = kk_imgs[(0, 0)]
     kk_rct = kk_img.get_rect()
     kk_rct.center = 300, 200
     bb_img=pg.Surface((20,20))
@@ -115,6 +143,7 @@ def main():
             if key_lst[k]:
                 sum_mv[0]+=tpl[0]
                 sum_mv[1]+=tpl[1]
+        kk_img = kk_imgs[tuple(sum_mv)]
         kk_rct.move_ip(sum_mv)
         if check_bound(kk_rct) != (True,True):
             kk_rct.move_ip(-sum_mv[0],-sum_mv[1])
