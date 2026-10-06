@@ -13,8 +13,26 @@ DELTA={
 }
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+def init_bb_imgs() -> tuple[list[pg.Surface], list[int]]:
+    """
+    10段階の大きさに合わせた爆弾Surfaceのリストと、
+    10段階の加速度のリストを作成して返す関数
+
+    戻り値:
+        tuple[list[pg.Surface], list[int]]: (爆弾Surfaceリスト, 加速度リスト)
+    """
+    bb_imgs = []
+    for r in range(1, 11):
+        bb_img = pg.Surface((20 * r, 20 * r))
+        pg.draw.circle(bb_img, (255, 0, 0), (10 * r, 10 * r), 10 * r)
+        bb_img.set_colorkey((0, 0, 0))  # 黒色部分を透過処理
+        bb_imgs.append(bb_img)
+
+    bb_accs = [a for a in range(1, 11)]
+    return bb_imgs, bb_accs
+
 def gameover(screen: pg.Surface) -> None:
-    
+
     bo_img = pg.Surface((WIDTH, HEIGHT))
     bo_img.set_alpha(200)
     pg.draw.rect(bo_img, (0, 0, 0), (0, 0, WIDTH, HEIGHT))
@@ -64,6 +82,9 @@ def main():
     bb_img=pg.Surface((20,20))
     pg.draw.circle(bb_img, (255, 0, 0), (10, 10), 10)
     bb_img.set_colorkey((0, 0, 0))
+    bb_imgs, bb_accs = init_bb_imgs()
+    bb_img = bb_imgs[0]
+    bb_rct = bb_img.get_rect()
     bb_rct=bb_img.get_rect()
     bb_rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)
     vx,vy=+5,+5
@@ -100,7 +121,16 @@ def main():
 
         screen.blit(kk_img, kk_rct)
 
-        bb_rct.move_ip(vx,vy)
+        idx = min(tmr // 500, 9)
+
+        avx = vx * bb_accs[idx]
+        avy = vy * bb_accs[idx]
+
+        bb_img = bb_imgs[idx]
+        bb_rct.width = bb_img.get_rect().width
+        bb_rct.height = bb_img.get_rect().height
+
+        bb_rct.move_ip(avx,avy)
         yoko,tate=check_bound(bb_rct)
         if not yoko:
             vx *= -1
