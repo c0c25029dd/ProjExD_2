@@ -5,7 +5,6 @@ import sys
 import time
 import pygame as pg
 
-
 WIDTH, HEIGHT = 1100, 650
 DELTA={
     pg.K_UP: (0,-5),
@@ -26,18 +25,12 @@ def calc_orientation(org: pg.Rect, dst: pg.Rect, current_xy: tuple[float, float]
     戻り値:
         tuple[float, float]: 正規化された方向ベクトル (vx, vy) または 計算前のベクトル
     """
-    # 1. 差ベクトル（こうかとん - 爆弾）を求める
     diff_x = dst.centerx - org.centerx
     diff_y = dst.centery - org.centery
-
-    # 2. 差ベクトルのノルム（距離）を計算
     norm = math.hypot(diff_x, diff_y)
-
-    # 3. 距離が300未満の場合は慣性として直前の方向を維持する
     if norm < 300:
         return current_xy
 
-    # 4. ノルムが0でなければ√50（約7.07）に正規化して返す
     if norm != 0:
         vx = diff_x / norm * math.sqrt(50)
         vy = diff_y / norm * math.sqrt(50)
@@ -53,12 +46,8 @@ def get_kk_imgs() -> dict[tuple[int, int], pg.Surface]:
     戻り値:
         dict[tuple[int, int], pg.Surface]: (移動量x, 移動量y) -> こうかとんSurface の辞書
     """
-    # 基本のこうかとん画像（左向き）
     base_img = pg.image.load("fig/3.png")
-
-    # 左右反転した画像（右向き）
     flip_img = pg.transform.flip(base_img, True, False)
-
     kk_dict = {
         ( 0,  0): pg.transform.rotozoom(base_img, 0, 0.9),       # 静止時（左向き）
         (-5,  0): pg.transform.rotozoom(base_img, 0, 0.9),       # 左
@@ -122,7 +111,6 @@ def gameover(screen: pg.Surface) -> None:
     screen.blit(kk_crying_img, kk_rct2)
 
     pg.display.update()
-    import time
     time.sleep(5)
     
 
