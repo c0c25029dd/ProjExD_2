@@ -13,6 +13,34 @@ DELTA={
 }
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+def gameover(screen: pg.Surface) -> None:
+    
+    bo_img = pg.Surface((WIDTH, HEIGHT))
+    bo_img.set_alpha(200)
+    pg.draw.rect(bo_img, (0, 0, 0), (0, 0, WIDTH, HEIGHT))
+    screen.blit(bo_img, [0, 0])
+
+    font = pg.font.Font(None, 80)
+    txt_img = font.render("Game Over", True, (255, 255, 255))
+    txt_rct = txt_img.get_rect()
+    txt_rct.center = WIDTH // 2, HEIGHT // 2
+    screen.blit(txt_img, txt_rct)
+
+    kk_crying_img = pg.image.load("fig/8.png")
+    
+    kk_rct1 = kk_crying_img.get_rect()
+    kk_rct1.center = WIDTH // 2 - 200, HEIGHT // 2
+    screen.blit(kk_crying_img, kk_rct1)
+
+    kk_rct2 = kk_crying_img.get_rect()
+    kk_rct2.center = WIDTH // 2 + 200, HEIGHT // 2
+    screen.blit(kk_crying_img, kk_rct2)
+
+    pg.display.update()
+    import time
+    time.sleep(5)
+    
+
 def check_bound(rect: pg.Rect) -> tuple[bool,bool]:
     """
     引数：こうかとんRectかばくだんRect
@@ -25,7 +53,6 @@ def check_bound(rect: pg.Rect) -> tuple[bool,bool]:
     if rect.top <0 or HEIGHT <rect.bottom:
         tate = False
     return yoko, tate        
-
 
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
@@ -41,7 +68,6 @@ def main():
     bb_rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)
     vx,vy=+5,+5
 
-
     clock = pg.time.Clock()
     tmr = 0
     while True:
@@ -51,7 +77,7 @@ def main():
         screen.blit(bg_img, [0, 0]) 
 
         if kk_rct.colliderect(bb_rct):
-            print("game over")
+            gameover(screen)
             return
 
         key_lst = pg.key.get_pressed()
@@ -81,12 +107,10 @@ def main():
         if not tate:
             vy *= -1
         
-
         screen.blit(bb_img, bb_rct)
         pg.display.update()
         tmr += 1
         clock.tick(50)
-
 
 if __name__ == "__main__":
     pg.init()
